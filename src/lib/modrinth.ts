@@ -1,5 +1,6 @@
 import { cacheLife } from "next/cache";
 import { categorize, type Category } from "./categorize";
+import { classify, type Dependencies } from "./classify";
 import curseforgeLinks from "@/data/curseforge-links.json";
 import approvedMentions from "@/data/approved-mentions.json";
 import excluded from "@/data/excluded.json";
@@ -10,21 +11,6 @@ const API = "https://api.modrinth.com/v2";
 // Modrinth asks every client to send an identifying User-Agent.
 const USER_AGENT =
   "LuisGustavoDev/aero-addons/0.1.1 (github.com/LuisGustavoDev)";
-
-// A project whose latest version *requires* one of these is listed automatically.
-const PARENT_PROJECTS: Record<string, string> = {
-  oWaK0Q19: "Create Aeronautics",
-  T9PomCSv: "Sable",
-};
-
-// Projects that only mention a parent, or depend on it optionally, may just be
-// standalone mods with some compatibility. They wait in the review queue
-// (/review in development) until their slug goes into approved-mentions.json
-// or excluded.json.
-const PARENT_MENTIONS: [RegExp, string][] = [
-  [/aeronautics|create[: ]+simulated|simulated[- ]project/i, "Create Aeronautics"],
-  [/\bsable\b/i, "Sable"],
-];
 
 const SEARCH_QUERIES = ["aeronautics", "sable", "simulated", "create aero"];
 const PAGE_SIZE = 100;
@@ -141,8 +127,6 @@ async function searchCandidates(): Promise<Map<string, SearchHit>> {
   return hits;
 }
 
-type Dependencies = { required: Set<string>; optional: Set<string> };
-
 async function dependenciesByProject(
   versionIds: string[],
 ): Promise<Map<string, Dependencies>> {
@@ -199,11 +183,6 @@ export type Catalog = {
   pending: Addon[];
 };
 
-const parentNames = (ids: Set<string>) =>
-  Object.entries(PARENT_PROJECTS)
-    .filter(([id]) => ids.has(id))
-    .map(([, name]) => name);
-
 export async function getCatalog(): Promise<Catalog> {
   "use cache";
   cacheLife("hours");
@@ -214,27 +193,21 @@ export async function getCatalog(): Promise<Catalog> {
     .filter((id): id is string => Boolean(id));
   const deps = await dependenciesByProject(versionIds);
 
-  const skip = new Set<string>(excluded);
-  const approved = new Set<string>(approvedMentions);
+  const lists = {
+    excluded: new Set<string>(excluded),
+    approved: new Set<string>(approvedMentions),
+  };
   const addons: Addon[] = [];
   const pending: Addon[] = [];
 
   for (const hit of candidates.values()) {
-    if (hit.project_id in PARENT_PROJECTS || skip.has(hit.slug)) continue;
-    const projectDeps = deps.get(hit.project_id);
-    const required = parentNames(projectDeps?.required ?? new Set());
-    if (required.length > 0) {
-      addons.push(toAddon(hit, required));
-      continue;
-    }
-
-    const text = `${hit.title} ${hit.description}`;
-    const loose = new Set([
-      ...parentNames(projectDeps?.optional ?? new Set()),
-      ...PARENT_MENTIONS.filter(([re]) => re.test(text)).map(([, name]) => name),
-    ]);
-    if (loose.size === 0) continue;
-    (approved.has(hit.slug) ? addons : pending).push(toAddon(hit, [...loose]));
+    const result = classify(
+      { id: hit.project_id, slug: hit.slug, title: hit.title, description: hit.description },
+      deps.get(hit.project_id),
+      lists,
+    );
+    if (result.status === "skipped") continue;
+    (result.status === "listed" ? addons : pending).push(toAddon(hit, result.requires));
   }
   addons.push(...(manualAddons as ManualAddon[]).map(fromManual));
 
