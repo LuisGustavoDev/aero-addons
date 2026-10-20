@@ -31,9 +31,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" className="font-bold tracking-tight">
               <span className="text-brass">Aero</span>Addons
             </Link>
-            <Link href="/about" className="text-sm text-subtle hover:text-fg">
-              About
-            </Link>
+            <div className="flex items-center gap-4 text-sm">
+              <Link href="/about" className="text-subtle hover:text-fg">
+                About
+              </Link>
+              <Link
+                href="/submit"
+                className="rounded-md border border-brass px-3 py-1.5 hover:bg-brass hover:text-brass-ink"
+              >
+                Submit an addon
+              </Link>
+            </div>
           </div>
         </nav>
 

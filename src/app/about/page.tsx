@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "About — AeroAddons",
@@ -29,7 +30,12 @@ export default function About() {
       <p>
         CurseForge&apos;s API terms don&apos;t allow caching its data, so the
         site doesn&apos;t read from it. When an addon is also published on
-        CurseForge, its card links straight to that page instead.
+        CurseForge, its card links straight to that page instead. Addons that
+        only exist on CurseForge can be added through the{" "}
+        <Link href="/submit" className="underline hover:text-brass">
+          submission form
+        </Link>
+        .
       </p>
 
       <h2 className="text-xl font-semibold">Disclaimer</h2>
