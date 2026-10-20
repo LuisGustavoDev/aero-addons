@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { ThemeToggle, themeScript } from "@/components/theme-toggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,7 +25,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // The theme script may set data-theme before React hydrates.
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="flex min-h-full flex-col">
         <nav className="border-b border-line">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
@@ -32,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span className="text-brass">Aero</span>Addons
             </Link>
             <div className="flex items-center gap-4 text-sm">
+              <ThemeToggle />
               <Link href="/about" className="text-subtle hover:text-fg">
                 About
               </Link>
