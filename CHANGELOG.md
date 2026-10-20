@@ -4,6 +4,11 @@ Todas as mudanças relevantes do projeto ficam registradas aqui.
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [0.2.1] - 2026-10-20
+
+### Corrigido
+- O deploy não lia o endereço do deploy novo no GitHub Actions, porque lá a Vercel imprime só a URL em vez de JSON. O teste de fumaça barrou o deploy, e nada quebrado foi para o ar.
+
 ## [0.2.0] - 2026-10-20
 
 ### Adicionado

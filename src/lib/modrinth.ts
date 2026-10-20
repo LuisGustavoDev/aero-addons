@@ -10,7 +10,7 @@ const API = "https://api.modrinth.com/v2";
 
 // Modrinth asks every client to send an identifying User-Agent.
 const USER_AGENT =
-  "LuisGustavoDev/aero-addons/0.2.0 (github.com/LuisGustavoDev)";
+  "LuisGustavoDev/aero-addons/0.2.1 (github.com/LuisGustavoDev)";
 
 const SEARCH_QUERIES = ["aeronautics", "sable", "simulated", "create aero"];
 const PAGE_SIZE = 100;
