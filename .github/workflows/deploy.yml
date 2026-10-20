@@ -58,8 +58,13 @@ jobs:
           url=$(node scripts/deployment-url.mjs deploy.out)
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
+      # New deployments sit behind Vercel's deployment protection, so the smoke
+      # test sends the project's automation bypass secret (masked in the logs).
       - name: Smoke test the new deployment
-        run: node scripts/smoke-test.mjs --vercel "${{ steps.candidate.outputs.url }}"
+        run: |
+          secret=$(node scripts/vercel-bypass.mjs)
+          echo "::add-mask::$secret"
+          VERCEL_AUTOMATION_BYPASS_SECRET="$secret" node scripts/smoke-test.mjs "${{ steps.candidate.outputs.url }}"
 
       - name: Remember the deployment currently live
         id: previous
