@@ -1,0 +1,53 @@
+name: Apply approved submission
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  apply:
+    # Only maintainers can add labels, so the "approved" label is the review gate.
+    if: github.event.label.name == 'approved' && contains(github.event.issue.labels.*.name, 'submission')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply submission
+        id: apply
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          set +e
+          node scripts/apply-submission.mjs > result.txt
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          cat result.txt
+
+      - name: Commit data change
+        if: steps.apply.outputs.code == '0'
+        run: |
+          git config user.name "aeroaddons-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data
+          git commit -m "data: apply submission #${{ github.event.issue.number }}"
+          git push
+
+      - name: Report back on the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          CODE: ${{ steps.apply.outputs.code }}
+        run: |
+          if [ "$CODE" = "0" ]; then
+            gh issue comment "$NUMBER" --body "Applied: $(cat result.txt) It will appear after the next deploy."
+            gh issue close "$NUMBER"
+          else
+            gh issue comment "$NUMBER" --body "Not applied automatically: $(cat result.txt)"
+          fi
