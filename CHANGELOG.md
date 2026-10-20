@@ -4,6 +4,11 @@ Todas as mudanças relevantes do projeto ficam registradas aqui.
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [0.3.0] - 2026-10-20
+
+### Adicionado
+- Botão no topo para alternar entre o tema do sistema, claro e escuro. A escolha fica salva no navegador e é aplicada antes da página aparecer.
+
 ## [0.2.3] - 2026-10-20
 
 ### Corrigido
