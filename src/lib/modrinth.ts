@@ -9,7 +9,7 @@ const API = "https://api.modrinth.com/v2";
 
 // Modrinth asks every client to send an identifying User-Agent.
 const USER_AGENT =
-  "LuisGustavoDev/aero-addons/0.1.0 (github.com/LuisGustavoDev)";
+  "LuisGustavoDev/aero-addons/0.1.1 (github.com/LuisGustavoDev)";
 
 // A project whose latest version *requires* one of these is listed automatically.
 const PARENT_PROJECTS: Record<string, string> = {
