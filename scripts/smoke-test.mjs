@@ -11,9 +11,9 @@ if (!base) {
 }
 
 const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
-const headers = bypass
-  ? { "x-vercel-protection-bypass": bypass, "x-vercel-set-bypass-cookie": "true" }
-  : {};
+// Only the bypass header: asking Vercel to also set the bypass cookie makes it
+// answer with a redirect, which is meant for browsers.
+const headers = bypass ? { "x-vercel-protection-bypass": bypass } : {};
 
 // A broken Modrinth fetch would still render the page, just nearly empty.
 const MIN_ADDONS = 100;
