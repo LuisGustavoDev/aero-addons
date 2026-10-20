@@ -53,8 +53,10 @@ jobs:
       - name: Deploy without taking traffic
         id: candidate
         run: |
-          $VERCEL deploy --prebuilt --prod --skip-domain --json --token="$VERCEL_TOKEN" > deploy.json
-          echo "url=$(node -p 'require("./deploy.json").deployment.url')" >> "$GITHUB_OUTPUT"
+          $VERCEL deploy --prebuilt --prod --skip-domain --token="$VERCEL_TOKEN" > deploy.out
+          # A separate assignment makes the step fail if no URL is found.
+          url=$(node scripts/deployment-url.mjs deploy.out)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test the new deployment
         run: node scripts/smoke-test.mjs --vercel "${{ steps.candidate.outputs.url }}"
