@@ -1,0 +1,82 @@
+name: Deploy to production
+
+# Every push to main goes to production, but only after the full check passes.
+# The new build is deployed without taking traffic, smoke-tested, and only then
+# promoted. If the live site still fails afterwards, it rolls back.
+on:
+  push:
+    branches: [main]
+  # Used by approve-submission.yml: pushes made with GITHUB_TOKEN don't trigger
+  # workflows on their own.
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL: npx --yes vercel@64
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/verify
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pull Vercel settings
+        run: $VERCEL pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build
+        run: $VERCEL build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy without taking traffic
+        id: candidate
+        run: |
+          $VERCEL deploy --prebuilt --prod --skip-domain --json --token="$VERCEL_TOKEN" > deploy.json
+          echo "url=$(node -p 'require("./deploy.json").deployment.url')" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test the new deployment
+        run: node scripts/smoke-test.mjs --vercel "${{ steps.candidate.outputs.url }}"
+
+      - name: Remember the deployment currently live
+        id: previous
+        if: vars.PRODUCTION_URL != ''
+        continue-on-error: true
+        run: |
+          $VERCEL inspect "${{ vars.PRODUCTION_URL }}" --json --token="$VERCEL_TOKEN" > previous.json
+          echo "id=$(node -p 'const d = require("./previous.json"); d.id ?? d.uid ?? ""')" >> "$GITHUB_OUTPUT"
+
+      - name: Promote to production
+        run: $VERCEL promote "${{ steps.candidate.outputs.url }}" --yes --token="$VERCEL_TOKEN"
+
+      - name: Smoke test the live site
+        id: live
+        if: vars.PRODUCTION_URL != ''
+        run: |
+          sleep 10
+          node scripts/smoke-test.mjs "${{ vars.PRODUCTION_URL }}"
+
+      - name: Roll back if the live site is broken
+        if: failure() && steps.live.outcome == 'failure' && steps.previous.outputs.id != ''
+        run: $VERCEL rollback "${{ steps.previous.outputs.id }}" --yes --token="$VERCEL_TOKEN"
