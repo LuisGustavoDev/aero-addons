@@ -4,6 +4,11 @@ Todas as mudanças relevantes do projeto ficam registradas aqui.
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [0.2.3] - 2026-10-20
+
+### Corrigido
+- O teste de fumaça pedia também o cookie de bypass, e a Vercel respondia com um redirecionamento em vez da página. Agora envia só o cabeçalho de bypass.
+
 ## [0.2.2] - 2026-10-20
 
 ### Corrigido
