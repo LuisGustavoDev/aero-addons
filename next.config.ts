@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
+  images: {
+    remotePatterns: [
+      new URL("https://cdn.modrinth.com/**"),
+      new URL("https://media.forgecdn.net/**"),
+    ],
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {
