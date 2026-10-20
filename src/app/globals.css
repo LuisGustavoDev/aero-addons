@@ -9,10 +9,13 @@
   --subtle: #6b655a;
   --brass: #b7791f;
   --brass-ink: #ffffff;
+  color-scheme: light;
 }
 
+/* Dark follows the system unless the visitor picked light; data-theme is set
+   by the theme toggle (and restored before paint by the script in layout.tsx). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #121315;
     --foreground: #ecebe8;
     --surface: #1b1d20;
@@ -21,7 +24,20 @@
     --subtle: #9a9c9f;
     --brass: #e0a64b;
     --brass-ink: #1b1305;
+    color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #121315;
+  --foreground: #ecebe8;
+  --surface: #1b1d20;
+  --muted: #272a2e;
+  --line: #2f3338;
+  --subtle: #9a9c9f;
+  --brass: #e0a64b;
+  --brass-ink: #1b1305;
+  color-scheme: dark;
 }
 
 @theme inline {
