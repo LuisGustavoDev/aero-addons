@@ -1,14 +1,39 @@
 // Checks that a running copy of the site renders real data.
-// Usage: node scripts/smoke-test.mjs <base-url>   (exits 1 on any failure)
+// Usage:
+//   node scripts/smoke-test.mjs <base-url>
+//   node scripts/smoke-test.mjs --vercel <deployment-url>
+// The --vercel form goes through `vercel curl`, which gets past Vercel's
+// deployment protection (needs VERCEL_TOKEN). Exits 1 on any failure.
+import { spawnSync } from "node:child_process";
 
-const base = (process.argv[2] ?? "").replace(/\/$/, "");
+const args = process.argv.slice(2);
+const viaVercel = args[0] === "--vercel";
+const base = (viaVercel ? args[1] : args[0] ?? "").replace(/\/$/, "");
 if (!base) {
-  console.error("Usage: node scripts/smoke-test.mjs <base-url>");
+  console.error("Usage: node scripts/smoke-test.mjs [--vercel] <url>");
   process.exit(1);
 }
 
 // A broken Modrinth fetch would still render the page, just nearly empty.
 const MIN_ADDONS = 100;
+const STATUS_MARKER = "\n__SMOKE_STATUS__";
+
+async function get(path) {
+  if (!viaVercel) {
+    const res = await fetch(`${base}${path}`, { redirect: "follow" });
+    return { status: res.status, html: await res.text() };
+  }
+  const token = process.env.VERCEL_TOKEN ? ["--token", process.env.VERCEL_TOKEN] : [];
+  const result = spawnSync(
+    "npx",
+    ["--yes", "vercel@64", "curl", path, "--deployment", base, "--yes", ...token, "--", "-sL", "-w", `${STATUS_MARKER}%{http_code}`],
+    { encoding: "utf8", maxBuffer: 50 * 1024 * 1024 },
+  );
+  const out = result.stdout ?? "";
+  const at = out.lastIndexOf(STATUS_MARKER);
+  if (at === -1) throw new Error(`vercel curl failed: ${result.stderr?.trim().split("\n").pop()}`);
+  return { status: Number(out.slice(at + STATUS_MARKER.length)), html: out.slice(0, at) };
+}
 
 const checks = [
   {
@@ -27,13 +52,11 @@ const checks = [
 
 let failed = false;
 for (const check of checks) {
-  const url = `${base}${check.path}`;
   try {
-    const res = await fetch(url, { redirect: "follow" });
-    const html = await res.text();
+    const { status, html } = await get(check.path);
     const problem =
-      res.status !== check.status
-        ? `status ${res.status}, expected ${check.status}`
+      status !== check.status
+        ? `status ${status}, expected ${check.status}`
         : check.test
           ? check.test(html)
           : true;
