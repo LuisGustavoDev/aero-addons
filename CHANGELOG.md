@@ -4,6 +4,12 @@ Todas as mudanças relevantes do projeto ficam registradas aqui.
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [0.2.2] - 2026-10-20
+
+### Corrigido
+- O teste de fumaça do deploy novo usava o `vercel curl`, que repassa o `--token` para o `curl` e quebrava no CI. Agora ele usa o segredo de bypass para automação da Vercel, gerado pela API quando o projeto ainda não tem um.
+- O teste de fumaça não segue mais redirecionamentos, então a tela de login da Vercel conta como falha.
+
 ## [0.2.1] - 2026-10-20
 
 ### Corrigido
