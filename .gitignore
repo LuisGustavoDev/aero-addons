@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local submissions written in development
+.submissions.local.jsonl
+!.env.example
