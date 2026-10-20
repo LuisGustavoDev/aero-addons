@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "slug": "cf-aeroaddons-form-check",
+    "title": "[TEST] AeroAddons Form Check",
+    "description": "Test submission to verify the form creates a GitHub issue. Safe to close.",
+    "author": "AeroAddons test",
+    "curseforgeUrl": "https://www.curseforge.com/minecraft/mc-mods/aeroaddons-form-check",
+    "iconUrl": null,
+    "loaders": [
+      "neoforge"
+    ],
+    "gameVersions": [
+      "1.21.1"
+    ],
+    "category": "Compatibility",
+    "addedAt": "2026-10-20T00:33:45.139Z"
+  }
+]
